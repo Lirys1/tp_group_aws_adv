@@ -1,12 +1,43 @@
+# ---------------------------------------------------------------
+# Terraform : state, cache providers, plans
+# ---------------------------------------------------------------
 .terraform/
-
 *.tfstate
 *.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 
-terraform.tfvars
+# Secrets Terraform : seuls les terraform.tfvars SANS secret (dimensionnement,
+# CIDR...) sont versionnés. Toute valeur sensible va dans un fichier *.secret.tfvars
+# ou secrets.auto.tfvars, jamais commité.
+*.secret.tfvars
+secrets.auto.tfvars
+# Ancien fichier racine (avant restructuration) qui contenait des secrets
+/terraform.tfvars
 
+# ---------------------------------------------------------------
+# Clés et secrets
+# ---------------------------------------------------------------
 *.pem
 *.key
+*.ppk
+.env
+.env.*
+ansible/group_vars/**/vault.yml
+ansible/.vault_pass*
+*.retry
 
-.terraform.lock.hcl
-crash.log
+# ---------------------------------------------------------------
+# Divers
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+__pycache__/
