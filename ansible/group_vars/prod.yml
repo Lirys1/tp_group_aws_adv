@@ -1,0 +1,14 @@
+---
+# PROD : environnement de référence -> logs limités aux avertissements,
+# aucune information technique exposée, supervision moins bavarde mais
+# seuil disque plus strict.
+neocargo_env: prod
+
+webserver_error_log_level: warn
+webserver_access_log_enabled: true
+webserver_debug_page: false
+
+monitoring_log_level: info
+monitoring_check_interval_minutes: 5
+monitoring_log_success: false
+monitoring_disk_threshold_percent: 80

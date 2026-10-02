@@ -1,8 +1,28 @@
 ---
-- name: AtlasForge
-  hosts: role_app
+# Playbook principal : configure les serveurs app d'UN environnement.
+#
+#   source scripts/tf_env.sh staging
+#   ansible-playbook site.yml -e target_env=staging
+#
+# Sans -e target_env, le motif ne correspond à aucun hôte : rien n'est
+# modifié (garde-fou contre une exécution sur le mauvais environnement).
+- name: Configurer les serveurs applicatifs TrackFleet
+  hosts: "{{ target_env | default('aucun_environnement') }}:&app"
   become: true
 
+  pre_tasks:
+    - name: Verifier la coherence entre l'environnement cible et les variables chargees
+      ansible.builtin.assert:
+        that:
+          - target_env in ['staging', 'prod']
+          - lookup('ansible.builtin.env', 'NEOCARGO_ENV') == target_env
+        fail_msg: >-
+          Environnement incoherent : target_env={{ target_env }} mais
+          NEOCARGO_ENV={{ lookup('ansible.builtin.env', 'NEOCARGO_ENV') }}.
+          Lancez d'abord : source scripts/tf_env.sh {{ target_env }}
+        quiet: true
+
   roles:
-    - common
-    - webapp
+    - role: common
+    - role: webserver
+    - role: monitoring

@@ -1,0 +1,20 @@
+---
+# Variables communes à toutes les instances app (staging et prod).
+
+# --- Connexion SSH via le bastion du MEME environnement ----------------
+# Le bastion est retrouvé dans l'inventaire dynamique (groupe bastion
+# intersecté avec le groupe de l'environnement de l'hôte).
+neocargo_ssh_key: "{{ lookup('ansible.builtin.env', 'NEOCARGO_SSH_KEY') | default('~/.ssh/ipssi-tp.pem', true) }}"
+neocargo_bastion_ip: "{{ hostvars[(groups['bastion'] | intersect(groups[tags.Environment]))[0]]['public_ip_address'] }}"
+
+ansible_ssh_private_key_file: "{{ neocargo_ssh_key }}"
+ansible_ssh_common_args: >-
+  -o StrictHostKeyChecking=no
+  -o ProxyCommand="ssh -i {{ neocargo_ssh_key }} -o StrictHostKeyChecking=no -W %h:%p -q ubuntu@{{ neocargo_bastion_ip }}"
+
+# --- Base de données : valeurs issues des outputs Terraform ------------
+# Exportées par scripts/tf_env.sh (jamais écrites dans le dépôt).
+webserver_db_host: "{{ lookup('ansible.builtin.env', 'RDS_HOST') }}"
+webserver_db_name: "{{ lookup('ansible.builtin.env', 'RDS_DB_NAME') }}"
+webserver_db_user: "{{ lookup('ansible.builtin.env', 'RDS_USER') }}"
+webserver_db_password: "{{ lookup('ansible.builtin.env', 'RDS_PASSWORD') }}"

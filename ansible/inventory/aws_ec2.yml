@@ -1,0 +1,30 @@
+---
+# Inventaire dynamique AWS EC2.
+# Toutes les instances NeoCargo (staging + prod) sont découvertes, puis
+# rangées dans des groupes construits à partir des tags posés par Terraform :
+#   - staging / prod : tag Environment  -> group_vars/staging.yml, prod.yml
+#   - app / bastion  : tag Role
+# site.yml cible ensuite  "<env>:&app"  (intersection) pour ne toucher
+# qu'UN environnement à la fois.
+plugin: amazon.aws.aws_ec2
+
+regions:
+  - eu-west-3
+
+filters:
+  tag:Project: neocargo
+  instance-state-name: running
+
+# Les instances app n'ont pas d'IP publique : on s'y connecte par leur IP
+# privée, via le bastion (voir group_vars/app.yml).
+hostnames:
+  - private-ip-address
+
+compose:
+  ansible_host: private_ip_address
+
+groups:
+  staging: tags.Environment == 'staging'
+  prod: tags.Environment == 'prod'
+  app: tags.Role == 'app'
+  bastion: tags.Role == 'bastion'
