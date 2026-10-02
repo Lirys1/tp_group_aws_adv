@@ -7,6 +7,8 @@
 *.tfplan
 tfplan
 crash.log
+# Lock files exclus : l equipe utilise Terraform OU OpenTofu (registres differents)
+.terraform.lock.hcl
 crash.*.log
 override.tf
 override.tf.json
