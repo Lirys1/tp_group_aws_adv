@@ -1,0 +1,21 @@
+---
+# Rôle monitoring : supervision basique de chaque instance app.
+#  1. node_exporter (paquet Ubuntu prometheus-node-exporter) expose les
+#     métriques système sur le port 9100 (accessible depuis le bastion).
+#  2. un script de contrôle local lancé par cron vérifie nginx, le endpoint
+#     /health et l'espace disque, et journalise le résultat dans syslog.
+
+monitoring_node_exporter_port: 9100
+# Niveaux : debug, info, warn, error
+monitoring_log_level: info
+
+monitoring_script_path: /usr/local/bin/trackfleet-healthcheck.sh
+monitoring_syslog_tag: trackfleet-health
+monitoring_health_url: "http://127.0.0.1{{ webserver_health_path | default('/health') }}"
+
+# Fréquence du contrôle (minutes) et seuil d'alerte disque (%)
+monitoring_check_interval_minutes: 5
+monitoring_disk_threshold_percent: 80
+
+# true = journalise aussi les contrôles réussis (utile en staging)
+monitoring_log_success: false
