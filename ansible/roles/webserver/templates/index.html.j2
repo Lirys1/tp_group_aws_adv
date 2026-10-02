@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- {{ ansible_managed }} -->
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ webserver_app_title }} - {{ webserver_environment }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; color: #333; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { color: #0056b3; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; color: #fff; font-weight: bold; }
+        .badge-staging { background: #e67e22; }
+        .badge-prod { background: #c0392b; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>{{ webserver_app_title }}</h1>
+        <p>Plateforme de suivi et d'optimisation d'itinéraires de flottes.</p>
+        <p>Environnement : <span class="badge badge-{{ webserver_environment }}">{{ webserver_environment | upper }}</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Instance applicative (ASG)</h2>
+        <ul>
+            <li><strong>Hostname :</strong> {{ ansible_facts['hostname'] }}</li>
+            <li><strong>Adresse IP privée :</strong> {{ ansible_facts['default_ipv4']['address'] | default('n/a') }}</li>
+            <li><strong>Zone de disponibilité :</strong> {{ placement.availability_zone | default('n/a') }}</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Connectivité base de données (RDS)</h2>
+        <p><strong>Statut :</strong>
+{% if webserver_db_check is not defined or webserver_db_check is skipped %}
+            <span class="error">NON TESTÉ</span>
+{% elif webserver_db_check.rc == 0 %}
+            <span class="success">CONNECTÉ</span>
+{% else %}
+            <span class="error">ÉCHEC DE CONNEXION</span>
+{% endif %}
+        </p>
+    </div>
+{% if webserver_debug_page %}
+
+    <div class="card">
+        <h2>Debug (staging uniquement)</h2>
+        <ul>
+            <li><strong>Endpoint RDS :</strong> {{ webserver_db_host }}</li>
+            <li><strong>Base :</strong> {{ webserver_db_name }}</li>
+            <li><strong>OS :</strong> {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}</li>
+            <li><strong>Niveau de log nginx :</strong> {{ webserver_error_log_level }}</li>
+        </ul>
+    </div>
+{% endif %}
+</body>
+</html>
