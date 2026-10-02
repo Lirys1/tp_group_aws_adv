@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>LocAuto Solutions - AtlasForge</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; color: #333; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { color: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>LocAuto Solutions — Plateforme AtlasForge</h1>
+        <p>Environnement de préproduction sécurisé (Architecture 3-tiers).</p>
+    </div>
+
+    <div class="card">
+        <h2>Instance Applicative (ASG)</h2>
+        <ul>
+            <li><strong>Hostname :</strong> {{ ansible_hostname }}</li>
+            <li><strong>Adresse IP Privée :</strong> {{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}</li>
+            <li><strong>Zone de Disponibilité :</strong> {{ ansible_ec2_placement_availability_zone | default('eu-west-3') }}</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Connectivité Base de Données (RDS)</h2>
+        <ul>
+            <li><strong>Endpoint :</strong> {{ rds_host }}</li>
+            <li><strong>Statut de la connexion :</strong> 
+                {% if 'SUCCESS' in rds_test_result.stdout %}
+                    <span class="success">CONNECTÉ (Succès)</span>
+                {% else %}
+                    <span class="error">ÉCHEC DE CONNEXION</span>
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

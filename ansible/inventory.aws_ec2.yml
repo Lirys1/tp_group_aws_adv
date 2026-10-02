@@ -1,0 +1,14 @@
+plugin: amazon.aws.aws_ec2
+regions:
+  - eu-west-3
+
+filters:
+  tag:Project: AtlasForge
+  instance-state-name: running
+
+keyed_groups:
+  - prefix: role
+    key: tags.Role
+
+hostnames:
+  - private-ip-address

@@ -1,0 +1,49 @@
+---
+- name: Install Nginx web server
+  apt:
+    name: nginx
+    state: present
+
+- name: Ensure Nginx is started and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Test connection to RDS PostgreSQL database securely
+  ansible.builtin.shell: |
+    python3 -c "
+    import psycopg2
+    try:
+        conn = psycopg2.connect(
+            host='{{ rds_host }}',
+            database='{{ rds_db_name }}',
+            user='{{ rds_user }}',
+            password='{{ rds_password }}',
+            connect_timeout=3
+        )
+        print('SUCCESS')
+        conn.close()
+    except Exception as e:
+        print('FAILED')
+    "
+  register: rds_test_result
+  changed_when: false
+  no_log: true
+
+- name: Deploy dynamic web page via template
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Create health check endpoint (/health)
+  copy:
+    content: "OK"
+    dest: /var/www/html/health
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  notify: Restart nginx

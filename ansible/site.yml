@@ -1,0 +1,8 @@
+---
+- name: AtlasForge
+  hosts: role_app
+  become: true
+
+  roles:
+    - common
+    - webapp

@@ -1,0 +1,5 @@
+---
+rds_host: "ipssi-rds-postgres.cj2ys2waexcm.eu-west-3.rds.amazonaws.com"
+rds_db_name: "applicationdb"
+rds_user: "postgres"
+
