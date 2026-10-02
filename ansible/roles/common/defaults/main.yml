@@ -1,0 +1,15 @@
+---
+# Rôle common : socle système commun à toutes les instances app.
+
+# Paquets de base (postgresql-client sert au test de connexion RDS du rôle webserver)
+common_packages:
+  - curl
+  - git
+  - postgresql-client
+  - python3-psycopg2
+
+common_timezone: Europe/Paris
+
+# Durcissement SSH
+common_ssh_permit_root_login: "no"
+common_ssh_password_authentication: "no"
