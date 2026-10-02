@@ -1,0 +1,7 @@
+---
+# Configuration ansible-lint (utilisée en local et par la CI)
+profile: production
+exclude_paths:
+  - .github/
+  - terraform/
+  - docs/

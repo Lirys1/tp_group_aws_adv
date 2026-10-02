@@ -1,0 +1,84 @@
+# =====================================================================
+# CI IaC (BONUS) - validation automatique de chaque Pull Request vers main
+#   - terraform fmt -check, validate, plan (staging + prod)
+#   - ansible-lint sur les rôles
+# Ce pipeline n'exécute JAMAIS terraform apply : l'apply reste une action
+# manuelle décidée par l'équipe après la revue humaine.
+# =====================================================================
+name: CI IaC
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [staging, prod]
+    defaults:
+      run:
+        working-directory: terraform/environments/${{ matrix.environment }}
+    env:
+      # Les identifiants AWS Academy expirent toutes les ~4h : s'ils ne sont
+      # pas (ou plus) renseignés dans les secrets du dépôt, le plan est sauté
+      # mais fmt et validate tournent quand même.
+      HAS_AWS_CREDS: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installer Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: terraform fmt -check
+        working-directory: terraform
+        run: terraform fmt -check -recursive -diff
+
+      - name: terraform init
+        run: terraform init -input=false
+
+      - name: terraform validate
+        run: terraform validate -no-color
+
+      - name: terraform plan (sans apply)
+        if: env.HAS_AWS_CREDS == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+        run: terraform plan -input=false -no-color -lock=false
+
+      - name: Plan ignoré (pas d'identifiants AWS)
+        if: env.HAS_AWS_CREDS != 'true'
+        run: echo "::notice::Secrets AWS absents - terraform plan non exécuté pour ${{ matrix.environment }}"
+
+  ansible-lint:
+    name: ansible-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer ansible-core, ansible-lint et les collections
+        run: |
+          pip install "ansible-core>=2.15,<2.18" ansible-lint
+          ansible-galaxy collection install -r ansible/requirements.yml
+
+      - name: ansible-lint
+        run: ansible-lint ansible

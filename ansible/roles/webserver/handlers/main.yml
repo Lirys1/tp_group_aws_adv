@@ -1,0 +1,13 @@
+---
+# Les deux handlers écoutent le même évènement et s'exécutent dans l'ordre :
+# on valide la configuration AVANT de recharger nginx.
+- name: Valider la configuration nginx
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  listen: Reload nginx
+
+- name: Recharger nginx
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
+  listen: Reload nginx

@@ -1,0 +1,37 @@
+---
+# Rôle monitoring : agent node_exporter + script de contrôle planifié.
+
+- name: Installer node_exporter
+  ansible.builtin.apt:
+    name: prometheus-node-exporter
+    state: present
+
+- name: Configurer les options de node_exporter
+  ansible.builtin.template:
+    src: node-exporter.default.j2
+    dest: /etc/default/prometheus-node-exporter
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart node_exporter
+
+- name: S'assurer que node_exporter est demarre et active au boot
+  ansible.builtin.service:
+    name: prometheus-node-exporter
+    state: started
+    enabled: true
+
+- name: Deployer le script de controle de sante
+  ansible.builtin.template:
+    src: healthcheck.sh.j2
+    dest: "{{ monitoring_script_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Planifier le controle de sante
+  ansible.builtin.cron:
+    name: trackfleet-healthcheck
+    minute: "*/{{ monitoring_check_interval_minutes }}"
+    job: "{{ monitoring_script_path }}"
+    user: root

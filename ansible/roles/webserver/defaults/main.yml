@@ -1,0 +1,30 @@
+---
+# Rôle webserver : nginx servant la page TrackFleet + endpoint de santé.
+# Toutes les valeurs ci-dessous peuvent être surchargées par environnement
+# dans group_vars/staging.yml et group_vars/prod.yml.
+
+webserver_app_title: "NeoCargo TrackFleet"
+webserver_environment: "{{ neocargo_env | default('inconnu') }}"
+
+webserver_port: 80
+webserver_server_name: "_"
+webserver_root: /var/www/html
+webserver_site_name: trackfleet
+
+# Doit correspondre au health check de l'ALB (module Terraform compute)
+webserver_health_path: /health
+
+# Journalisation nginx (niveaux : debug, info, notice, warn, error, crit)
+webserver_error_log_level: warn
+webserver_access_log_enabled: true
+
+# Affiche des informations techniques sur la page (à réserver au staging)
+webserver_debug_page: false
+
+# Test de connectivité à la base RDS (valeurs injectées par group_vars/app.yml)
+webserver_db_check_enabled: true
+webserver_db_host: ""
+webserver_db_port: 5432
+webserver_db_name: ""
+webserver_db_user: ""
+webserver_db_password: ""

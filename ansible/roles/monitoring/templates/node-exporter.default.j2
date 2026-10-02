@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+# Options de démarrage de prometheus-node-exporter
+# Environnement : {{ neocargo_env | default('inconnu') }}
+ARGS="--web.listen-address=:{{ monitoring_node_exporter_port }} --log.level={{ monitoring_log_level }}"

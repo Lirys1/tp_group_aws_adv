@@ -1,0 +1,76 @@
+---
+# Rôle webserver : installe et configure nginx, publie la page applicative
+# et le endpoint de santé utilisé par l'ALB.
+
+- name: Installer nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Deployer la configuration du site nginx
+  ansible.builtin.template:
+    src: nginx-site.conf.j2
+    dest: "/etc/nginx/sites-available/{{ webserver_site_name }}.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Activer le site
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ webserver_site_name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ webserver_site_name }}.conf"
+    state: link
+  notify: Reload nginx
+
+- name: Desactiver le site par defaut de nginx
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
+- name: Creer le endpoint de sante pour l'ALB
+  ansible.builtin.copy:
+    content: "OK\n"
+    dest: "{{ webserver_root }}{{ webserver_health_path }}"
+    owner: www-data
+    group: www-data
+    mode: "0644"
+
+# Lecture seule : ne modifie rien sur l'hôte (changed_when: false), et
+# n'échoue pas si la base est injoignable (le résultat est affiché sur la page).
+- name: Tester la connexion a la base RDS
+  ansible.builtin.command:
+    argv:
+      - psql
+      - --host={{ webserver_db_host }}
+      - --port={{ webserver_db_port }}
+      - --username={{ webserver_db_user }}
+      - --dbname={{ webserver_db_name }}
+      - --no-password
+      - --tuples-only
+      - --command=SELECT 1;
+  environment:
+    PGPASSWORD: "{{ webserver_db_password }}"
+    PGCONNECT_TIMEOUT: "5"
+  register: webserver_db_check
+  changed_when: false
+  failed_when: false
+  no_log: true
+  when:
+    - webserver_db_check_enabled | bool
+    - webserver_db_host | length > 0
+
+- name: Deployer la page d'accueil
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ webserver_root }}/index.html"
+    owner: www-data
+    group: www-data
+    mode: "0644"
+
+- name: S'assurer que nginx est demarre et active au boot
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true

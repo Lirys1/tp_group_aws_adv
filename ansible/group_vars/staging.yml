@@ -1,0 +1,13 @@
+---
+# STAGING : environnement de test -> logs verbeux, page de debug, supervision
+# fréquente et bavarde.
+neocargo_env: staging
+
+webserver_error_log_level: info
+webserver_access_log_enabled: true
+webserver_debug_page: true
+
+monitoring_log_level: debug
+monitoring_check_interval_minutes: 1
+monitoring_log_success: true
+monitoring_disk_threshold_percent: 90

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Contrôle de santé TrackFleet ({{ neocargo_env | default('inconnu') }}) :
+# nginx actif, endpoint de santé OK, disque sous le seuil.
+# Résultats dans syslog :  journalctl -t {{ monitoring_syslog_tag }}
+
+TAG="{{ monitoring_syslog_tag }}"
+STATUS=0
+
+if ! systemctl is-active --quiet nginx; then
+  logger -t "$TAG" -p user.err "CRITIQUE : nginx n'est pas actif"
+  STATUS=1
+fi
+
+if ! curl -fsS --max-time 5 "{{ monitoring_health_url }}" > /dev/null; then
+  logger -t "$TAG" -p user.err "CRITIQUE : {{ monitoring_health_url }} ne repond pas"
+  STATUS=1
+fi
+
+DISK_USED=$(df --output=pcent / | tail -1 | tr -dc '0-9')
+if [ "$DISK_USED" -ge {{ monitoring_disk_threshold_percent }} ]; then
+  logger -t "$TAG" -p user.warning "ALERTE : disque / utilise a ${DISK_USED}% (seuil {{ monitoring_disk_threshold_percent }}%)"
+  STATUS=1
+fi
+
+{% if monitoring_log_success %}
+if [ "$STATUS" -eq 0 ]; then
+  logger -t "$TAG" -p user.info "OK : nginx actif, health OK, disque ${DISK_USED}%"
+fi
+{% endif %}
+
+exit "$STATUS"

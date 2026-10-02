@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+# Site {{ webserver_site_name }} - environnement {{ webserver_environment }}
+
+server {
+    listen {{ webserver_port }} default_server;
+    listen [::]:{{ webserver_port }} default_server;
+    server_name {{ webserver_server_name }};
+
+    root {{ webserver_root }};
+    index index.html;
+
+    # Ne pas divulguer la version de nginx
+    server_tokens off;
+
+{% if webserver_access_log_enabled %}
+    access_log /var/log/nginx/{{ webserver_site_name }}_access.log;
+{% else %}
+    access_log off;
+{% endif %}
+    error_log /var/log/nginx/{{ webserver_site_name }}_error.log {{ webserver_error_log_level }};
+
+    # Health check de l'ALB : pas de log pour ne pas noyer les access logs
+    location = {{ webserver_health_path }} {
+        access_log off;
+        default_type text/plain;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
