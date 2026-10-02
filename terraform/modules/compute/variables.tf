@@ -65,9 +65,9 @@ variable "key_name" {
 }
 
 variable "instance_profile_name" {
-  description = "Profil IAM existant à attacher aux instances (LabInstanceProfile sur AWS Academy). null = aucun"
+  description = "Profil IAM existant à attacher aux instances (ex : LabInstanceProfile). null = aucun (par défaut : SSH via bastion, aucun besoin IAM)"
   type        = string
-  default     = "LabInstanceProfile"
+  default     = null
 }
 
 variable "app_port" {

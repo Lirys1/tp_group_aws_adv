@@ -69,9 +69,9 @@ variable "key_name" {
 }
 
 variable "instance_profile_name" {
-  description = "Profil IAM fourni par AWS Academy (jamais créé par Terraform)"
+  description = "Profil IAM existant (ex : LabInstanceProfile si présent dans le Learner Lab). null = aucun. Jamais créé par Terraform"
   type        = string
-  default     = "LabInstanceProfile"
+  default     = null
 }
 
 variable "asg_min_size" {
